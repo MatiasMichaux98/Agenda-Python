@@ -1,11 +1,11 @@
 # Clase hija de Contacto para contactos personales
-#nuevo comentario
 from Contacto import Contacto
 
 
 class ContactoPersonal(Contacto):
-    def __init__(self, nombre, telefono, empresa, cargo, whatsapp=None, facebook=None, instagram=None):
-        super().__init__(nombre, telefono, empresa, cargo, whatsapp, facebook, instagram)
+    def __init__(self, id, nombre, telefono, empresa, cargo):
+        super().__init__(id, nombre, telefono, empresa, cargo)
+
 
     def mostrar_informacion(self):
         super().mostrar_informacion()

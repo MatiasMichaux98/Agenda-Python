@@ -1,10 +1,13 @@
 import psycopg2
 import colorama
 from colorama import Fore, Style, Back  # cambia el menu de color
-from contactoPersonal import *
-from ContactoProfesional import *
+
+import contactoPersonal
+from Contacto import *
+from ContactoProfesional import ContactoProfesional
 
 # Inicializar colorama
+from contactoPersonal import ContactoPersonal
 
 colorama.init()
 
@@ -25,12 +28,11 @@ conexion.commit()
 # Función para agregar un contacto a la base de datos
 def agregar_contacto(contacto):
     cursor.execute('''
-        INSERT INTO contactos (nombre, telefono, empresa, cargo,  whatsapp, facebook, instagram)
-        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        INSERT INTO contactos (nombre, telefono, empresa, cargo)
+        VALUES (%s, %s, %s, %s)
         RETURNING id
-    ''', (contacto.getnombre, contacto.gettelefono, contacto.getempresa, contacto.getcargo, contacto.getwhatsapp
-        , contacto.getfacebook,contacto.getwhatsapp))
-    contacto.id = cursor.fetchone()[0]
+    ''', (contacto.getnombre, contacto.gettelefono, contacto.getempresa, contacto.getcargo))
+    contactoPersonal.id = cursor.fetchone()[0]
     conexion.commit()
     print("Contacto agregado exitosamente.")
 
@@ -39,18 +41,44 @@ def agregar_contacto2(Contacto2):
         INSERT INTO contactop (nombre, telefono, empresa, cargo,edad,correo,  whatsapp, facebook, instagram)
         VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
         RETURNING id
-    ''', (Contacto2.getnombre, Contacto2.gettelefono,Contacto2.getempresa, Contacto2.getcargo,Contacto2.getedad,
-          Contacto2.getcorreo, Contacto2.getwhatsapp, Contacto2.getfacebook,Contacto2.getwhatsapp))
+    ''', [Contacto2.getnombre, Contacto2.gettelefono, Contacto2.getempresa, Contacto2.getcargo, Contacto2.getedad,
+          Contacto2.getcorreo, Contacto2.getwhatsapp, Contacto2.getfacebook, Contacto2.getwhatsapp])
     ContactoProfesional.id = cursor.fetchone()[0]
     conexion.commit()
     print("Contacto agregado exitosamente.")
 
 
 # Función para eliminar un contacto de la base de datos
-def eliminar_contacto(contacto_id):
-    cursor.execute('DELETE FROM contactos WHERE id = %s', (contacto_id,))
-    conexion.commit()
-    print("Contacto eliminado exitosamente.")
+def eliminar_contacto():
+    try:
+        tabla = None
+        while tabla not in ["1", "2"]:
+            tabla = input("Ingrese el número de tabla en la que desea eliminar el contacto:\n1. ContactoPersonal\n2. ContactoProfesional\n")
+            if tabla not in ["1", "2"]:
+                print("Opción no válida. Por favor, ingrese 1 o 2.")
+        tabla = int(tabla)
+        contacto_id = None
+        while not isinstance(contacto_id, int):
+            try:
+                contacto_id = int(input("Ingrese el ID del contacto a eliminar: "))
+            except ValueError:
+                print("ID no válido. Por favor, ingrese un número entero.")
+        with conexion:
+            with conexion.cursor() as cursor:
+                if tabla == 1:
+                    cursor.execute('DELETE FROM contactos WHERE id = %s', (contacto_id,))
+                    print("Contacto eliminado exitosamente de la tabla contactos.")
+                elif tabla == 2:
+                    cursor.execute('DELETE FROM contactop WHERE id = %s', (contacto_id,))
+                    print("Contacto eliminado exitosamente de la tabla contactop.")
+                else:
+                    print("Tabla no válida. No se pudo eliminar el contacto.")
+                conexion.commit()
+    except Exception as e:
+        print(f'Ocurrió un error: {e}')
+    finally:
+        if cursor is not None:
+            cursor.close()
 
 
 # Función para modificar un contacto en la base de datos
@@ -109,30 +137,39 @@ def buscar_contacto(nombre):
         for resultado in resultados:
             print(resultado)
     else:
-        print("No se encontraron contactos con ese nombre.")
+        print(Fore.GREEN+"No se encontraron contactos con ese nombre."+Style.RESET_ALL)
+
+# Función para buscar contactos por nombre para la otra tabla
+def buscar_contacto2(nombre):
+    cursor.execute("SELECT * FROM contactop WHERE nombre ILIKE %s", ('%' + nombre + '%',))
+    resultados = cursor.fetchall()
+    if len(resultados) > 0:
+        print("Resultados de búsqueda:")
+        for resultado in resultados:
+            print(resultado)
+    else:
+        print(Fore.GREEN+"No se encontraron contactos con ese nombre."+Style.RESET_ALL)
 
 
 # Función para mostrar la lista de contactos
 def mostrar_lista_contactos():
-    cursor.execute("SELECT * FROM contactos")
+    cursor.execute("SELECT * FROM contactos ORDER BY nombre ASC")
     contactos = cursor.fetchall()
     if len(contactos) > 0:
-        print(Fore.YELLOW+Back.BLACK+"Lista de contactos PERSONAL:"+Style.RESET_ALL)
+        print(Fore.YELLOW + Back.BLACK + "Lista de contactos PERSONAL:" + Style.RESET_ALL)
         for contacto in contactos:
-            contacto_personal = ContactoPersonal(contacto[0],contacto[1], contacto[2], contacto[3], contacto[4], contacto[5], contacto[6])
+            contacto_personal = ContactoPersonal(contacto[0],contacto[1], contacto[2], contacto[3], contacto[4])
             contacto_personal.mostrar_informacion()
             print("---")
     else:
         print("No hay contactos en la agenda.")
-# Función para mostrar la lista de contactos de la otra clase
 def mostrar_lista_contactos2():
-    cursor.execute("SELECT * FROM contactop")
+    cursor.execute("SELECT * FROM contactop ORDER BY nombre ASC")
     contactop = cursor.fetchall()
     if len(contactop) > 0:
         print(Fore.YELLOW + Back.BLACK + "Lista de contactos PROFESIONAL:" + Style.RESET_ALL)
         for contacto in contactop:
-
-            contacto_profesional = ContactoProfesional(contacto[0],contacto[1], contacto[2], contacto[3], contacto[4], contacto[5],contacto[6],contacto[7],contacto[8])
+            contacto_profesional = ContactoProfesional(contacto[0],contacto[1], contacto[2], contacto[3], contacto[4], contacto[5],contacto[6],contacto[7],contacto[8],contacto[9])
             contacto_profesional.mostrar_informacion()
             print("---")
     else:
@@ -192,10 +229,7 @@ def capturar_datos_contacto():
     telefono = input("Ingrese el teléfono: ")
     empresa = input("Ingrese la empresa: ")
     cargo = input("Ingrese el cargo: ")
-    whatsapp = input("Ingrese el número de WhatsApp: ")
-    facebook = input("Ingrese el perfil de Facebook: ")
-    instagram = input("Ingrese el perfil de Instagram: ")
-    return nombre, telefono, empresa, cargo,  whatsapp, facebook, instagram
+    return nombre, telefono, empresa, cargo
 #Funcion para capturar los datos del segundo menu
 def pedir_Datos_Contacto_Profesional():
     nombre = input("Ingrese el nombre: ")
@@ -231,12 +265,13 @@ def datos_menu_dos():
 
         if OPC == 1:
             nombre, telefono, empresa, cargo, edad, correo, whatsapp, facebook, instagram = pedir_Datos_Contacto_Profesional()
-            contacto_profesional = ContactoProfesional(nombre, telefono, empresa, cargo, edad, correo, whatsapp,facebook, instagram)
+            contacto_profesional = ContactoProfesional(id,nombre, telefono, empresa, cargo, edad, correo, whatsapp,facebook, instagram)
             agregar_contacto2(contacto_profesional)
         elif OPC == 2:
-            nombre, telefono, empresa, cargo, whatsapp, facebook, instagram = capturar_datos_contacto()
-            contacto = ContactoPersonal(nombre, telefono, empresa, cargo, whatsapp, facebook, instagram)
-            agregar_contacto(contacto)
+             nombre, telefono, empresa, cargo = capturar_datos_contacto()
+             Contacto_personal = ContactoPersonal(id,nombre, telefono, empresa, cargo )
+             agregar_contacto(Contacto_personal)
+
         elif OPC == 3:
             ejecutar_agenda()
         elif OPC == 4:
@@ -255,15 +290,12 @@ def ejecutar_agenda():
 
         if opcion == 1:
             datos_menu_dos()
-
         elif opcion == 2:
-            contacto_id = int(input("Ingrese el ID del contacto a eliminar: "))
-            eliminar_contacto(contacto_id)
+            eliminar_contacto()
         elif opcion == 3:
-
             contacto_id = int(input("Ingrese el ID del contacto a modificar: "))
-            nombre, telefono, empresa, cargo, whatsapp, facebook, instagram = capturar_datos_contacto()
-            modificar_contacto(contacto_id,nombre,telefono,empresa,cargo,whatsapp,facebook,instagram)
+            nombre, telefono, empresa, cargo = capturar_datos_contacto()
+            modificar_contacto(contacto_id,nombre,telefono,empresa,cargo)
         elif opcion == 4:
             fecha, descripcion = capturar_datos_evento()
             cursor.execute('SELECT * FROM contactos')
@@ -285,8 +317,22 @@ def ejecutar_agenda():
             fecha = (input("Digite la fecha (YYYY-MM-DD) del evento a ELIMINAR"))
             eliminar_evento_por_fecha(fecha)
         elif opcion == 7:
-            nombre = input("Ingrese el nombre del contacto a buscar: ")
-            buscar_contacto(nombre)
+            while True:
+                print(Fore.YELLOW + "1. Contacto Profesional" + Style.RESET_ALL)
+                print(Fore.YELLOW + "2. Contacto Personal" + Style.RESET_ALL)
+                print(Fore.YELLOW + "3. Volver al Menu Principal" + Style.RESET_ALL)
+                tabla = input("Seleccione el tipo de CONTACTO")
+                if tabla == "1":
+                    nombre = input("Ingrese el nombre del contacto a buscar: ")
+                    buscar_contacto2(nombre)
+                elif tabla == "2":
+                    nombre = input("Ingrese el nombre del contacto a buscar: ")
+                    buscar_contacto(nombre)
+                elif tabla == "3":
+                    ejecutar_agenda()
+                else:
+                    print("seleccione una opcion CORRECTA")
+
         elif opcion == 8:
             mostrar_lista_contactos()
             mostrar_lista_contactos2()

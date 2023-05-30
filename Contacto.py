@@ -3,44 +3,26 @@ import py as py
 
 
 class Contacto:
-    def __init__(self, id, nombre, telefono, empresa, cargo, whatsapp=None, facebook=None, instagram=None):
+    def __init__(self,id, nombre, telefono, empresa, cargo):
         self._id = id
         self._nombre = nombre
         self._telefono = telefono
         self._empresa = empresa
         self._cargo = cargo
-        self._whatsapp = whatsapp
-        self._facebook = facebook
-        self._instagram = instagram
+
 
     def mostrar_informacion(self):
-        print("ID:", self._id)
+        print("ID:",self._id)
         print("nombre:", self._nombre)
         print("telefono:", self._telefono)
         print("empresa:", self._empresa)
         print("cargo:", self._cargo)
-        print("whatsapp:", self._whatsapp)
-        print("facebook:", self._facebook)
-        print("instagram:", self._instagram)
 
 
 
 
-    def contactar(self):
-        print("Contactando a", self._nombre)
-        if self._whatsapp:
-            print("WhatsApp:", self._whatsapp)
-        if self._facebook:
-            print("Facebook:", self._facebook)
-        if self._instagram:
-            print("Instagram:", self._instagram)
-        if self._telefono:
-            print("Teléfono:", self._telefono)
 
-
-
-
-# Getters y
+# Getters y Setters
     @property
     def getid(self):
         return self._id
@@ -81,27 +63,4 @@ class Contacto:
        self._cargo = cargo
 
 
-    @property
-    def getwhatsapp(self):
-     return self._whatsapp
-
-    @getwhatsapp.setter
-    def set_whatsapp(self, whatsapp):
-     self._whatsapp = whatsapp
-
-    @property
-    def getfacebook(self):
-      return self._facebook
-
-    @getfacebook.setter
-    def set_facebook(self, facebook):
-      self._facebook = facebook
-
-    @property
-    def getinstagram(self):
-      return self._instagram
-
-    @getinstagram.setter
-    def set_instagram(self, instagram):
-      self._instagram = instagram
 
