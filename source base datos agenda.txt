@@ -1,0 +1,20 @@
+-- Crear la tabla de contactos
+CREATE TABLE contactos (
+    id SERIAL PRIMARY KEY,
+    nombre TEXT NOT NULL,
+    telefono TEXT,
+    empresa TEXT,
+    cargo TEXT,
+    foto BYTEA,
+    whatsapp TEXT,
+    facebook TEXT,
+    instagram TEXT
+);
+
+-- Crear la tabla de eventos
+CREATE TABLE eventos (
+    id SERIAL PRIMARY KEY,
+    fecha DATE NOT NULL,
+    descripcion TEXT,
+    contacto_id INTEGER REFERENCES contactos(id)
+);
