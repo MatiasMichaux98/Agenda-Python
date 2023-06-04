@@ -19,6 +19,7 @@ class ContactoProfesional(Contacto):
         print("whatsapp:", self._whatsapp)
         print("facebook:", self._facebook)
         print("instagram:", self._instagram)
+        print("Tipo: Profesional")
 
     def contactar(self):
         print("Contactando a", self._nombre)
